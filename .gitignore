@@ -1,0 +1,27 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Data / Models
+*.pkl
+*.h5
+*.ckpt
+
+# Java / JAR
+*.jar
+
+# Archives
+*.zip
+*.tar
+*.rar
+*.7z
+
+# Node
+node_modules/
+
+# System files
+.DS_Store
+Thumbs.db

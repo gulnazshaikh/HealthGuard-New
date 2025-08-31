@@ -1,0 +1,134 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #0b0b33; /* Dark navy background */
+  color: white;
+  font-family: Arial, sans-serif;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #0b0b33;
+  padding: 15px 30px;
+}
+
+.logo {
+  font-size: 22px;
+  font-weight: bold;
+  color: white;
+}
+
+.nav-links a {
+  color: white;
+  margin-left: 25px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.nav-links a:hover {
+  text-decoration: underline;
+}
+
+/* Info text */
+.info-text {
+  text-align: left;
+  margin: 20px 40px;
+  font-size: 16px;
+  color: #d300d3; /* Purple/Violet */
+  font-weight: bold;
+}
+
+/* Main Section */
+.upload-section {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.upload-section h1 {
+  color: white;
+  margin-bottom: 20px;
+}
+
+input[type="file"] {
+  margin: 10px 0;
+  padding: 10px;
+  width: 300px;
+  border: 2px solid #00bfff;
+  border-radius: 8px;
+  background: #0b0b33;
+  color: white;
+  font-size: 14px;
+}
+
+.buttons {
+  margin: 20px 0;
+}
+
+.upload-btn {
+  background-color: #00cfff;
+  border: none;
+  padding: 12px 24px;
+  margin-right: 15px;
+  color: white;
+  font-weight: bold;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.upload-btn:hover {
+  background-color: #009acd;
+}
+
+.clean-btn {
+  background-color: #28d745;
+  border: none;
+  padding: 12px 24px;
+  color: white;
+  font-weight: bold;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.clean-btn:hover {
+  background-color: #1e9f34;
+}
+
+.report-link {
+  display: block;
+  margin-top: 20px;
+  color: #00aaff;
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.report-link:hover {
+  text-decoration: underline;
+}
+
+.download-btn {
+  display: block;
+  margin: 20px auto;
+  background-color: #ff7f50;
+  border: none;
+  padding: 12px 24px;
+  color: white;
+  font-weight: bold;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.download-btn:hover {
+  background-color: #ff4500;
+}
+
+.message {
+  margin-top: 15px;
+  font-weight: bold;
+  color: yellow;
+}
