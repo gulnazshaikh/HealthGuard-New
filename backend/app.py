@@ -1,17 +1,13 @@
-from dotenv import load_dotenv
-load_dotenv()
-
-import google.generativeai as genai
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import pandas as pd
 import os
 
-# ---------------- CONFIG ----------------
 app = Flask(__name__)
 CORS(app)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -19,14 +15,10 @@ RAW_FILE = os.path.join(UPLOAD_FOLDER, "raw.csv")
 CLEAN_FILE = os.path.join(UPLOAD_FOLDER, "cleaned.csv")
 READY_FLAG = os.path.join(UPLOAD_FOLDER, "READY.flag")
 
-# ---------- GEMINI CONFIG ----------
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-pro")
-
 
 @app.route("/")
 def home():
-    return "✅ HealthGuard Backend running"
+    return "✅ Backend is running perfectly"
 
 
 # ---------------- UPLOAD ----------------
@@ -60,11 +52,11 @@ def clean():
     return jsonify({"message": "Cleaned successfully"})
 
 
-# ---------------- REVIEW ----------------
+# ---------------- QUICK REVIEW ----------------
 @app.route("/review", methods=["GET"])
 def review():
     if not os.path.exists(READY_FLAG):
-        return jsonify({"error": "Upload & clean CSV first"}), 400
+        return jsonify({"error": "upload_and_clean_first"}), 400
 
     df = pd.read_csv(CLEAN_FILE)
 
@@ -79,42 +71,62 @@ def review():
     })
 
 
-# ---------------- CHAT WITH CSV (GEMINI) ----------------
-@app.route("/chat", methods=["POST"])
-def chat_with_csv():
-    if not os.path.exists(READY_FLAG):
-        return jsonify({
-            "answer": "❌ Please upload and clean the CSV first."
-        }), 400
-
-    data = request.get_json()
-    question = data.get("question", "")
+# ---------------- VISUALIZATION ----------------
+# ---------------- VISUALIZATION ----------------
+@app.route("/visualize", methods=["GET"])
+def visualize():
+    # check cleaned data
+    if not os.path.exists(CLEAN_FILE):
+        return jsonify({"error": "Please upload and clean CSV first"}), 400
 
     df = pd.read_csv(CLEAN_FILE)
 
-    csv_context = f"""
-    Dataset info:
-    Rows: {df.shape[0]}
-    Columns: {df.columns.tolist()}
-    Sample data:
-    {df.head(5).to_string()}
-    """
+    # column from query
+    column = request.args.get("column")
 
-    prompt = f"""
-    You are a health data analyst.
-    Answer the user's question using the CSV data below.
+    # FIRST LOAD → only column list
+    if not column:
+        return jsonify({
+            "columns": df.columns.tolist()
+        })
 
-    {csv_context}
+    # invalid column safety
+    if column not in df.columns:
+        return jsonify({"error": "Invalid column selected"}), 400
 
-    Question: {question}
-    """
+    # ---------------- PIE & BAR (distribution) ----------------
+    value_counts = df[column].value_counts().head(5)
+    pie = [
+        {"name": str(k), "value": int(v)}
+        for k, v in value_counts.items()
+    ]
+    bar = pie  # same distribution
 
-    try:
-        response = model.generate_content(prompt)
-        return jsonify({"answer": response.text})
-    except Exception as e:
-        return jsonify({"answer": f"Gemini error: {str(e)}"}), 500
+    # ---------------- LINE (trend) ----------------
+    line = [
+        {"name": str(i), "value": float(v)}
+        for i, v in enumerate(df[column].head(10))
+        if pd.notnull(v)
+    ]
+
+    # ---------------- HEATMAP (correlation) ----------------
+    corr = df.corr(numeric_only=True)
+    heatmap = {
+        "x": corr.columns.tolist(),
+        "y": corr.columns.tolist(),
+        "z": corr.values.tolist()
+    }
+
+    return jsonify({
+        "columns": df.columns.tolist(),
+        "pie": pie,
+        "bar": bar,
+        "line": line,
+        "heatmap": heatmap
+    })
 
 
+# ---------------- RUN ----------------
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(port=5000, debug=True)
+

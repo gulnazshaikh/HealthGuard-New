@@ -1,0 +1,21 @@
+.heatmap {
+  grid-column: span 3;
+  background: #020617;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.heat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.heat-cell {
+  height: 60px;
+  background: #ef4444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
