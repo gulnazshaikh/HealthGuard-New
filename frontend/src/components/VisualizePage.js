@@ -1,3 +1,6 @@
+
+
+
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -49,6 +52,7 @@ export default function VisualizePage() {
           <LineChartCustom data={vizData.line} column={selectedColumn} />
         </>
       )}
+      
     </div>
   );
 }

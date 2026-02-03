@@ -110,7 +110,9 @@ def visualize():
     ]
 
     # ---------------- HEATMAP (correlation) ----------------
-    corr = df.corr(numeric_only=True)
+    corr = df.corr(numeric_only=True).fillna(0)
+
+    #corr = df.corr(numeric_only=True)
     heatmap = {
         "x": corr.columns.tolist(),
         "y": corr.columns.tolist(),
