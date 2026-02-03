@@ -5,14 +5,15 @@ import UploadPage from "./components/UploadPage";
 import QuickReview from "./components/QuickReview";
 import ChatWithCSV from "./components/ChatWithCSV";
 import VisualizePage from "./components/VisualizePage"; // ✅ Import actual VisualizePage
-import LeaderboardTable from "./components/LeaderboardTable"; // ✅ Fixed import path
+// import LeaderboardTable from "./components/LeaderboardTable"; // ❌ Removed
+
 import "./App.css";
 
-// TrainModel page with leaderboard
+// TrainModel page without leaderboard
 const TrainModel = () => (
   <div className="page">
     <h1>Train Your Model</h1>
-    <LeaderboardTable />
+    {/* LeaderboardTable removed */}
   </div>
 );
 

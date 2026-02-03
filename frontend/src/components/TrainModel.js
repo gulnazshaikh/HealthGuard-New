@@ -1,60 +1,84 @@
-import TrainModel from "./TrainModel";
-
 import React, { useState } from "react";
+import axios from "axios";
 import "./TrainModel.css";
 
-function TrainModel({ columns = [] }) {
-  const [target, setTarget] = useState("");
-  const [trained, setTrained] = useState(false);
-  const [accuracy, setAccuracy] = useState(null);
-  const [modelName, setModelName] = useState("");
+export default function TrainModel() {
+  const [file, setFile] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const handleTrain = () => {
-    // Simulation (no package install)
-    const fakeAccuracy = (Math.random() * 15 + 80).toFixed(2);
+  // 📤 Upload CSV (backend clean bhi yahin karta hai)
+  const uploadFile = async () => {
+    if (!file) {
+      alert("Please select a CSV file");
+      return;
+    }
 
-    setModelName("H2O AutoML (Simulated)");
-    setAccuracy(fakeAccuracy);
-    setTrained(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      await axios.post("http://127.0.0.1:5000/upload", formData);
+      alert("File uploaded successfully");
+    } catch (err) {
+      alert("Upload failed");
+    }
+  };
+
+  // 🤖 Train Model
+  const trainModel = async () => {
+    setLoading(true);
+    setLeaderboard([]);
+
+    try {
+      const res = await axios.post("http://127.0.0.1:5000/train-model");
+      setLeaderboard(res.data.leaderboard);
+    } catch (err) {
+      alert("Training failed");
+    }
+
+    setLoading(false);
   };
 
   return (
-    <div className="train-model-container">
-      <h2>Train Your Model</h2>
+    <div className="train-container">
+      <h1>Train Your Model</h1>
 
-      <p className="subtitle">
-        Select target column and train machine learning model
-      </p>
+      <input
+        type="file"
+        accept=".csv"
+        onChange={(e) => setFile(e.target.files[0])}
+      />
 
-      <select
-        className="target-select"
-        value={target}
-        onChange={(e) => setTarget(e.target.value)}
-      >
-        <option value="">Select Target Column</option>
-        {columns.map((col, index) => (
-          <option key={index} value={col}>
-            {col}
-          </option>
-        ))}
-      </select>
+      <br /><br />
 
-      <button
-        className="train-btn"
-        onClick={handleTrain}
-        disabled={!target}
-      >
-        Train Model
-      </button>
+      <button onClick={uploadFile}>Upload File</button>
+      <button onClick={trainModel}>Train Model</button>
 
-      {trained && (
-        <div className="result-card">
-          <p><b>Model Used:</b> {modelName}</p>
-          <p><b>Accuracy:</b> {accuracy}%</p>
-        </div>
+      {loading && <p>Training model...</p>}
+
+      {/* 📊 LEADERBOARD — PDF STYLE */}
+      {leaderboard.length > 0 && (
+        <table className="leaderboard-table">
+          <thead>
+            <tr>
+              {Object.keys(leaderboard[0]).map((key) => (
+                <th key={key}>{key}</th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {leaderboard.map((row, i) => (
+              <tr key={i}>
+                {Object.values(row).map((val, j) => (
+                  <td key={j}>{val}</td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       )}
     </div>
   );
 }
-
-export default TrainModel;
