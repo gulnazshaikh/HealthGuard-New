@@ -3,6 +3,11 @@ from flask_cors import CORS
 import pandas as pd
 import os
 
+import h2o
+from h2o.automl import H2OAutoML
+
+h2o.init()
+
 app = Flask(__name__)
 CORS(app)
 
@@ -129,8 +134,47 @@ def visualize():
 
 
 # ---------------- TRAIN MODEL ----------------
+# ---------------- TRAIN MODEL ----------------
+@app.route("/train-model", methods=["POST"])
+def train_model():
+
+    if not os.path.exists(RAW_FILE):
+        return jsonify({"error": "CSV not uploaded"}), 400
+
+    # 🔹 AUTO CLEAN (PDF STYLE)
+    df_pd = pd.read_csv(RAW_FILE)
+    df_pd.fillna(df_pd.mean(numeric_only=True), inplace=True)
+    df_pd.to_csv(CLEAN_FILE, index=False)
+
+    # ✅ THIS LINE FIXES QUICK REVIEW
+    with open(READY_FLAG, "w") as f:
+        f.write("ready")
+
+    # 🔹 H2O TRAINING
+    df = h2o.import_file(CLEAN_FILE)
+
+    target = df.columns[-1]   # PDF rule
+    x = df.columns
+    x.remove(target)
+
+    aml = H2OAutoML(
+        max_models=5,
+        seed=1,
+        exclude_algos=["DeepLearning"]
+    )
+
+    aml.train(x=x, y=target, training_frame=df)
+
+    lb = aml.leaderboard.as_data_frame().head(5)
+    leaderboard = lb.to_dict(orient="records")
+
+    return jsonify({
+        "message": "Model trained",
+        "leaderboard": leaderboard
+    })
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
 
+app.py

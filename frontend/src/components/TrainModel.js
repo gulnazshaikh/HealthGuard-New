@@ -7,7 +7,6 @@ export default function TrainModel() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // 📤 Upload CSV (backend clean bhi yahin karta hai)
   const uploadFile = async () => {
     if (!file) {
       alert("Please select a CSV file");
@@ -25,18 +24,14 @@ export default function TrainModel() {
     }
   };
 
-  // 🤖 Train Model
   const trainModel = async () => {
     setLoading(true);
-    setLeaderboard([]);
-
     try {
       const res = await axios.post("http://127.0.0.1:5000/train-model");
-      setLeaderboard(res.data.leaderboard);
+      setLeaderboard(res.data.leaderboard || []);
     } catch (err) {
       alert("Training failed");
     }
-
     setLoading(false);
   };
 
@@ -44,11 +39,7 @@ export default function TrainModel() {
     <div className="train-container">
       <h1>Train Your Model</h1>
 
-      <input
-        type="file"
-        accept=".csv"
-        onChange={(e) => setFile(e.target.files[0])}
-      />
+      <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files[0])} />
 
       <br /><br />
 
@@ -57,7 +48,6 @@ export default function TrainModel() {
 
       {loading && <p>Training model...</p>}
 
-      {/* 📊 LEADERBOARD — PDF STYLE */}
       {leaderboard.length > 0 && (
         <table className="leaderboard-table">
           <thead>
@@ -67,7 +57,6 @@ export default function TrainModel() {
               ))}
             </tr>
           </thead>
-
           <tbody>
             {leaderboard.map((row, i) => (
               <tr key={i}>
