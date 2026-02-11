@@ -135,25 +135,32 @@ def visualize():
 
 # ---------------- TRAIN MODEL ----------------
 # ---------------- TRAIN MODEL ----------------
+# ---------------- TRAIN MODEL ----------------
 @app.route("/train-model", methods=["POST"])
 def train_model():
+
+    data = request.json
+    target = data.get("target")
 
     if not os.path.exists(RAW_FILE):
         return jsonify({"error": "CSV not uploaded"}), 400
 
-    # 🔹 AUTO CLEAN (PDF STYLE)
+    if not target:
+        return jsonify({"error": "Target column required"}), 400
+
+    # Auto Clean
     df_pd = pd.read_csv(RAW_FILE)
     df_pd.fillna(df_pd.mean(numeric_only=True), inplace=True)
     df_pd.to_csv(CLEAN_FILE, index=False)
 
-    # ✅ THIS LINE FIXES QUICK REVIEW
     with open(READY_FLAG, "w") as f:
         f.write("ready")
 
-    # 🔹 H2O TRAINING
     df = h2o.import_file(CLEAN_FILE)
 
-    target = df.columns[-1]   # PDF rule
+    if target not in df.columns:
+        return jsonify({"error": "Invalid target column"}), 400
+
     x = df.columns
     x.remove(target)
 
@@ -166,11 +173,10 @@ def train_model():
     aml.train(x=x, y=target, training_frame=df)
 
     lb = aml.leaderboard.as_data_frame().head(5)
-    leaderboard = lb.to_dict(orient="records")
 
     return jsonify({
-        "message": "Model trained",
-        "leaderboard": leaderboard
+        "message": "Model trained successfully",
+        "leaderboard": lb.to_dict(orient="records")
     })
 
 # ---------------- RUN ----------------
