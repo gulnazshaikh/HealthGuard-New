@@ -7,9 +7,11 @@ export default function TrainModel() {
   const [columns, setColumns] = useState([]);
   const [target, setTarget] = useState("");
   const [leaderboard, setLeaderboard] = useState([]);
+  const [summary, setSummary] = useState([]);
+  const [metrics, setMetrics] = useState({});
+  const [featureImportance, setFeatureImportance] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Upload
   const uploadFile = async () => {
     if (!file) {
       alert("Select CSV first");
@@ -21,18 +23,17 @@ export default function TrainModel() {
 
     try {
       await axios.post("http://127.0.0.1:5000/upload", formData);
+      await axios.post("http://127.0.0.1:5000/clean");
 
-      // After upload → get columns
       const res = await axios.get("http://127.0.0.1:5000/visualize");
       setColumns(res.data.columns);
 
-      alert("File uploaded. Select target column.");
-    } catch (err) {
+      alert("Uploaded & Cleaned. Select target column.");
+    } catch {
       alert("Upload failed");
     }
   };
 
-  // Train
   const trainModel = async () => {
     if (!target) {
       alert("Select target column");
@@ -40,15 +41,21 @@ export default function TrainModel() {
     }
 
     setLoading(true);
+
     try {
       const res = await axios.post("http://127.0.0.1:5000/train-model", {
         target: target
       });
 
-      setLeaderboard(res.data.leaderboard);
-    } catch (err) {
+      setLeaderboard(res.data.leaderboard || []);
+      setSummary(res.data.summary || []);
+      setMetrics(res.data.metrics || {});
+      setFeatureImportance(res.data.feature_importance || []);
+
+    } catch {
       alert("Training failed");
     }
+
     setLoading(false);
   };
 
@@ -56,17 +63,11 @@ export default function TrainModel() {
     <div className="train-container">
       <h1>Train Model using H2O AutoML</h1>
 
-      <input
-        type="file"
-        accept=".csv"
-        onChange={(e) => setFile(e.target.files[0])}
-      />
+      <input type="file" accept=".csv" onChange={(e) => setFile(e.target.files[0])} />
 
       <br /><br />
-
       <button onClick={uploadFile}>Upload CSV</button>
 
-      {/* 🔥 TARGET DROPDOWN AFTER UPLOAD */}
       {columns.length > 0 && (
         <>
           <br /><br />
@@ -85,6 +86,7 @@ export default function TrainModel() {
 
       {loading && <p>Training model...</p>}
 
+      {/* 🔥 LEADERBOARD */}
       {leaderboard.length > 0 && (
         <>
           <h2>Model Leaderboard</h2>
@@ -108,6 +110,80 @@ export default function TrainModel() {
           </table>
         </>
       )}
+
+      {/* 🔥 MODEL SUMMARY TABLE */}
+      {summary && summary.length > 0 && (
+        <>
+          <h2>Model Summary</h2>
+          <table className="leaderboard-table">
+            <thead>
+              <tr>
+                {Object.keys(summary[0]).map((key) => (
+                  <th key={key}>{key}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {summary.map((row, i) => (
+                <tr key={i}>
+                  {Object.values(row).map((val, j) => (
+                    <td key={j}>{val}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      {/* 🔥 FEATURE IMPORTANCE */}
+      {featureImportance.length > 0 && (
+        <>
+          <h2>Feature Importance</h2>
+          <table className="leaderboard-table">
+            <thead>
+              <tr>
+                {Object.keys(featureImportance[0]).map((key) => (
+                  <th key={key}>{key}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {featureImportance.map((row, i) => (
+                <tr key={i}>
+                  {Object.values(row).map((val, j) => (
+                    <td key={j}>{val}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      {/* 🔥 EVALUATION METRICS TABLE */}
+      {metrics && Object.keys(metrics).length > 0 && (
+        <>
+          <h2>Evaluation Metrics</h2>
+          <table className="leaderboard-table">
+            <thead>
+              <tr>
+                <th>Metric</th>
+                <th>Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(metrics).map(([key, value], i) => (
+                <tr key={i}>
+                  <td>{key}</td>
+                  <td>{value}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
     </div>
   );
 }
