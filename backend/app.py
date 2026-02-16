@@ -135,26 +135,17 @@ def visualize():
 
 # ---------------- TRAIN MODEL ----------------
 # ---------------- TRAIN MODEL ----------------
-# ---------------- TRAIN MODEL ----------------
 @app.route("/train-model", methods=["POST"])
 def train_model():
 
     data = request.json
     target = data.get("target")
 
-    if not os.path.exists(RAW_FILE):
-        return jsonify({"error": "CSV not uploaded"}), 400
+    if not os.path.exists(CLEAN_FILE):
+        return jsonify({"error": "Please upload and clean CSV first"}), 400
 
     if not target:
         return jsonify({"error": "Target column required"}), 400
-
-    # Auto Clean
-    df_pd = pd.read_csv(RAW_FILE)
-    df_pd.fillna(df_pd.mean(numeric_only=True), inplace=True)
-    df_pd.to_csv(CLEAN_FILE, index=False)
-
-    with open(READY_FLAG, "w") as f:
-        f.write("ready")
 
     df = h2o.import_file(CLEAN_FILE)
 
@@ -172,15 +163,37 @@ def train_model():
 
     aml.train(x=x, y=target, training_frame=df)
 
+    # 🔥 Leaderboard
     lb = aml.leaderboard.as_data_frame().head(5)
 
+    leader = aml.leader
+
+    # 🔥 Model Summary
+    summary = leader.summary().as_data_frame().to_dict(orient="records")
+
+    # 🔥 Metrics
+    perf = leader.model_performance()
+    metrics = {
+       "RMSE": perf.rmse(),
+       "MSE": perf.mse(),
+       "MAE": perf.mae(),
+       "R2": perf.r2()
+    }
+
+    # 🔥 Feature Importance
+    try:
+        fi = leader.varimp(use_pandas=True).head(10)
+        feature_importance = fi.to_dict(orient="records")
+    except:
+        feature_importance = []
+
     return jsonify({
-        "message": "Model trained successfully",
-        "leaderboard": lb.to_dict(orient="records")
+        "leaderboard": lb.to_dict(orient="records"),
+        "summary": summary,
+        "metrics": metrics,
+        "feature_importance": feature_importance
     })
 
 # ---------------- RUN ----------------
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
-
-app.py
