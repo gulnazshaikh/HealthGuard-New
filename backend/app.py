@@ -79,8 +79,126 @@ def review():
         "missing": df.isnull().sum().to_dict(),
         "describe": df.describe().round(2).to_dict()
     })
+# ---------------- CHAT WITH CSV ----------------
+# ---------------- CHAT WITH CSV ----------------
+@app.route("/chat", methods=["POST"])
+def chat():
 
+    if not os.path.exists(READY_FLAG):
+        return jsonify({"error": "Please upload and clean CSV first"}), 400
 
+    data = request.get_json()
+    question = data.get("question", "").lower().strip()
+
+    if not question:
+        return jsonify({"error": "Question required"}), 400
+
+    try:
+        df = pd.read_csv(CLEAN_FILE)
+
+        # -------- DATASET SIZE --------
+        if any(word in question for word in ["row", "rows"]):
+            return jsonify({"answer": f"The dataset contains {df.shape[0]} rows."})
+
+        if any(word in question for word in ["column", "columns"]) and "name" not in question:
+            return jsonify({"answer": f"The dataset contains {df.shape[1]} columns."})
+
+        # -------- COLUMN NAMES --------
+        if any(word in question for word in ["column names", "columns name", "list columns", "show columns"]):
+            return jsonify({"answer": "Columns are: " + ", ".join(df.columns)})
+
+        # -------- MISSING VALUES --------
+        if "missing" in question or "null" in question:
+            missing = df.isnull().sum().to_dict()
+            return jsonify({"answer": f"Missing values per column:\n{missing}"})
+
+        # -------- SUMMARY --------
+        if any(word in question for word in ["summary", "describe", "statistics", "stats"]):
+            summary = df.describe(include='all').fillna("").round(2).to_string()
+            return jsonify({"answer": summary})
+
+        # -------- COLUMN SPECIFIC QUESTIONS --------
+        for col in df.columns:
+            if col.lower() in question:
+
+                if not pd.api.types.is_numeric_dtype(df[col]):
+                    return jsonify({
+                        "answer": f"Column '{col}' is not numeric."
+                    })
+
+                # Mean
+                if "mean" in question:
+                    return jsonify({
+                        "answer": f"Mean of '{col}' is {round(df[col].mean(), 2)}"
+                    })
+
+                # Median
+                if "median" in question or "50%" in question:
+                    return jsonify({
+                        "answer": f"Median of '{col}' is {round(df[col].median(), 2)}"
+                    })
+
+                # Max
+                if "max" in question:
+                    return jsonify({
+                        "answer": f"Maximum of '{col}' is {round(df[col].max(), 2)}"
+                    })
+
+                # Min
+                if "min" in question:
+                    return jsonify({
+                        "answer": f"Minimum of '{col}' is {round(df[col].min(), 2)}"
+                    })
+
+                # Standard Deviation
+                if "std" in question or "standard deviation" in question:
+                    return jsonify({
+                        "answer": f"Standard Deviation of '{col}' is {round(df[col].std(), 2)}"
+                    })
+
+                # Count
+                if "count" in question:
+                    return jsonify({
+                        "answer": f"Count of '{col}' is {int(df[col].count())}"
+                    })
+
+                # 25%
+                if "25%" in question:
+                    return jsonify({
+                        "answer": f"25th percentile of '{col}' is {round(df[col].quantile(0.25), 2)}"
+                    })
+
+                # 75%
+                if "75%" in question:
+                    return jsonify({
+                        "answer": f"75th percentile of '{col}' is {round(df[col].quantile(0.75), 2)}"
+                    })
+
+                # If only column name typed → show full stats
+                desc = df[col].describe()
+                return jsonify({
+                    "answer": (
+                        f"Statistics for '{col}':\n"
+                        f"Count: {round(desc['count'],2)}\n"
+                        f"Mean: {round(desc['mean'],2)}\n"
+                        f"Std: {round(desc['std'],2)}\n"
+                        f"Min: {round(desc['min'],2)}\n"
+                        f"25%: {round(desc['25%'],2)}\n"
+                        f"50% (Median): {round(desc['50%'],2)}\n"
+                        f"75%: {round(desc['75%'],2)}\n"
+                        f"Max: {round(desc['max'],2)}"
+                    )
+                })
+
+        # -------- DEFAULT FALLBACK --------
+        return jsonify({
+            "answer": "Ask dataset related questions like rows, columns, summary, or specific column name."
+        })
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+        
 # ---------------- VISUALIZATION ----------------
 @app.route("/visualize", methods=["GET"])
 def visualize():
