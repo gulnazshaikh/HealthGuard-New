@@ -26,3 +26,19 @@
 .link.active {
   text-decoration: underline;
 }
+
+/* 🔥 Logout Button Style Added */
+.logout-btn {
+  margin-left: 15px;
+  padding: 6px 12px;
+  background-color: #ff4d4d;
+  border: none;
+  color: #fff;
+  font-weight: 500;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.logout-btn:hover {
+  background-color: #cc0000;
+}
