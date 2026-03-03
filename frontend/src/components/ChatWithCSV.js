@@ -4,7 +4,7 @@ import axios from "axios";
 export default function ChatWithCSV() {
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState([
-    { type: "bot", text: "⚠️ Ask dataset related questions (rows, columns, summary, missing values)." }
+    { type: "bot", text: " Ask dataset related questions (rows, columns, summary, missing values)." }
   ]);
   const [loading, setLoading] = useState(false);
 

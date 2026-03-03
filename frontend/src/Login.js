@@ -20,7 +20,9 @@ export default function Login() {
   return (
     <div className="login-container">
       <form className="login-box" onSubmit={handleLogin}>
-        <h2>Login</h2>
+        
+        {/* 🔹 Heading */}
+        <h2 className="login-heading">Login</h2>
 
         <label>Email</label>
         <input
@@ -41,6 +43,7 @@ export default function Login() {
         />
 
         <button type="submit">Login</button>
+
       </form>
     </div>
   );
